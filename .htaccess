@@ -1,0 +1,46 @@
+#RewriteEngine On
+#LsRecaptcha 100
+#RewriteRule .* - [E=verifycaptcha:drop]
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    # Atur agar CodeIgniter mengelola permintaan
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php/$1 [L]
+    
+    # Allow access to service-worker.js
+    RewriteRule ^service-worker.js$ service-worker.js [L]
+    
+</IfModule>
+<IfModule mod_headers.c>
+    # Security headers relevant for service workers
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "DENY"
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    # Atur agar situs Anda mengizinkan CORS (Cross-Origin Resource Sharing)
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept"
+    Header set Access-Control-Allow-Methods "POST, GET, OPTIONS"
+    
+    # Cache headers for service worker
+    <Files "service-worker.js">
+        Header set Cache-Control "public, max-age=0, must-revalidate"
+    </Files>
+    
+    # Atur untuk mengizinkan cache konten PWA 
+    <FilesMatch "\.(js|css|png|jpg|jpeg|gif|svg|ico|pdf|woff|woff2|ttf|eot)$">
+        Header set Cache-Control "max-age=2592000, public"
+    </FilesMatch>
+    
+</IfModule>
+# Atur HTTP ke HTTPS (opsional)
+<IfModule mod_rewrite.c>
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    
+</IfModule>
+# Mengompres file yang dikirimkan ke browser (seperti HTML, CSS, dan JavaScript)
+<IfModule mod_brotli.c>
+    AddOutputFilterByType BROTLI_COMPRESS text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
